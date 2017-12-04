@@ -1,5 +1,6 @@
 package com.yaoge.putao.study.hbase;
 
+import com.google.common.collect.Lists;
 import com.yaoge.putao.study.common.LoadProperties;
 import com.yaoge.putao.study.module.HbaseRow;
 import org.apache.commons.lang.StringUtils;
@@ -11,10 +12,12 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public class HbaseClient {
 
@@ -69,8 +72,8 @@ public class HbaseClient {
     //获得表
     private static Table getTable(String tableName) {
         try {
-            Admin admin=getCon().getAdmin();
-            if(!admin.tableExists(TableName.valueOf(tableName))){
+            Admin admin = getCon().getAdmin();
+            if (!admin.tableExists(TableName.valueOf(tableName))) {
                 return null;
             }
             table = connection.getTable(TableName.valueOf(tableName));
@@ -86,12 +89,13 @@ public class HbaseClient {
             return;
         }
         try {
-            Admin admin=getCon().getAdmin();
-            if(!admin.tableExists(TableName.valueOf(tableName))){
+            Admin admin = getCon().getAdmin();
+            if (!admin.tableExists(TableName.valueOf(tableName))) {
                 return;
             }
             HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf(tableName));
             admin.createTable(tableDescriptor);
+
             admin.close();
         } catch (IOException e) {
             logger.error("create table fail ", e);
@@ -106,7 +110,7 @@ public class HbaseClient {
         String object = ToStringBuilder.reflectionToString(t, ToStringStyle.SIMPLE_STYLE);
         //long bankNums = Splitter.on(",").trimResults().splitToList(object).stream().filter(filed -> StringUtils.isBlank(filed)).count();
         //System.out.println(bankNums);
-       // return bankNums > 0 ? false : true;
+        // return bankNums > 0 ? false : true;
         return false;
     }
 
@@ -230,11 +234,64 @@ public class HbaseClient {
 //        return list;
 //    }
 
-    public static void main(String[] args) {
-        HbaseClient hbaseClient = new HbaseClient();
-//         HbaseRow row = new HbaseRow("testFor", "", "cc", "ddd");
-//         hbaseClient.put(row);
+//    public static void main(String[] args) {
+//        HbaseClient hbaseClient = new HbaseClient();
+////         HbaseRow row = new HbaseRow("testFor", "", "cc", "ddd");
+////         hbaseClient.put(row);
+//    }
+    @Test
+    public void putData() throws IOException {
+        logger.info("start time = {}",System.currentTimeMillis());
+        List<Put> list=makeTestData();
+        logger.info("end time = {}",System.currentTimeMillis());
+        table = getTable("pid_test");
+
+        table.put(list);
+        table.close();
+        logger.info("putData over");
+
     }
 
-
+    public List<Put> makeTestData(){
+        List<Put> list= Lists.newArrayList();
+        for(int i=1;i<=70000;i++){
+            String rowkey="hadoop001"+i;//主键+pid;
+            String command="curl -d apk=1498507219960SqjKWrRZ.apk&devices=MI 4LTE&intents=intent_finish_task=crowdsource://www.meituan.com/finishedtask,intent_balance_activity = crowdsource://www.meituan.com/BalanceActivity,intent_setting = crowdsource://www.meituan.com/setting,intent_main = crowdsource://www.meituan.com/home,intent_equipmentmall_activity = crowdsource://www.meituan.com/EquipmentMallActivity&events=1000&jenkinsUrl=http://ci.sankuai.com/job/banma/job/banma_autotest/job/banma_app_ci/job/Banma_Android_CrowdSource_Monkey/269/&after=notifyCrashAndAnrforStability&notify=wangtongchuang@meituan.com&numbers=561e73d2&misId=wangtongchuang&conanKey=d28caa9d-ad75-4d62-8420-df2f658bfb76 https://conan.sankuai.com/ci/stability/advanced-monkey";
+            String ppid= "8183"+i;
+            String egid= "500"+i;
+            String gid= "500"+i;
+            String euid= "500"+i;
+            String user= "sankuai"+i;
+            String uid= "500"+i;
+            String starttime= "2017-12-04T16:15:56+0800";
+            String mtime= "2015-06-16T10:15:41+0800";
+            String owner_gid= "0"+i;
+            String owner_uid= "0"+i;
+            String mode= "100755"+i;
+            String path= "/usr/bin/curl";
+            String sid= "-1"+i;
+            String processname= "curl";
+            String host_name="hadoop001";
+            Put put=new Put(Bytes.toBytes(rowkey));
+            String familyName="pid_data";
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(command),Bytes.toBytes(command));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(ppid),Bytes.toBytes(ppid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(egid),Bytes.toBytes(egid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(user),Bytes.toBytes(user));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(uid),Bytes.toBytes(uid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(starttime),Bytes.toBytes(starttime));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(mtime),Bytes.toBytes(mtime));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(owner_gid),Bytes.toBytes(owner_gid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(owner_uid),Bytes.toBytes(owner_uid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(mode),Bytes.toBytes(mode));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(path),Bytes.toBytes(path));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(gid),Bytes.toBytes(gid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(euid),Bytes.toBytes(euid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(sid),Bytes.toBytes(sid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(processname),Bytes.toBytes(processname));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(host_name),Bytes.toBytes(host_name));
+            list.add(put);
+        }
+       return list;
+    }
 }

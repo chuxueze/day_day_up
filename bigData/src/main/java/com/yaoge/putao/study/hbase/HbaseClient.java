@@ -11,6 +11,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -156,21 +157,21 @@ public class HbaseClient {
 //        return map;
 //    }
 
-//    public long rowCount(String tableName) {
-//        long count = 0;
-//        try {
-//            Table table = getTable(tableName);
-//            Scan scan = new Scan();
-//            scan.setFilter(new FirstKeyOnlyFilter());
-//            ResultScanner resultScanner = table.getScanner(scan);
-//            for (Result result : resultScanner) {
-//                count += result.size();
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return count;
-//    }
+    public long rowCount(String tableName) {
+        long count = 0;
+        try {
+            Table table = getTable(tableName);
+            Scan scan = new Scan();
+            scan.setFilter(new FirstKeyOnlyFilter());
+            ResultScanner resultScanner = table.getScanner(scan);
+            for (Result result : resultScanner) {
+                count += result.size();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
 //
 //    public void deleteOneRow(String tableName, String rowKey) {
 //        try {
@@ -240,58 +241,69 @@ public class HbaseClient {
 ////         hbaseClient.put(row);
 //    }
     @Test
+    //一个本地文件64M
+    //hbase 文件270M
+
     public void putData() throws IOException {
         logger.info("start time = {}",System.currentTimeMillis());
         List<Put> list=makeTestData();
         logger.info("end time = {}",System.currentTimeMillis());
         table = getTable("pid_test");
-
         table.put(list);
         table.close();
         logger.info("putData over");
+        logger.info("size ={}",rowCount("pid_test"));
+
 
     }
 
-    public List<Put> makeTestData(){
+    public List<Put> makeTestData() throws IOException {
         List<Put> list= Lists.newArrayList();
+//        FileWriter fw = new FileWriter("/Users/luyao/fileData", true);
+//        BufferedWriter bw = new BufferedWriter(fw);
         for(int i=1;i<=70000;i++){
             String rowkey="hadoop001"+i;//主键+pid;
             String command="curl -d apk=1498507219960SqjKWrRZ.apk&devices=MI 4LTE&intents=intent_finish_task=crowdsource://www.meituan.com/finishedtask,intent_balance_activity = crowdsource://www.meituan.com/BalanceActivity,intent_setting = crowdsource://www.meituan.com/setting,intent_main = crowdsource://www.meituan.com/home,intent_equipmentmall_activity = crowdsource://www.meituan.com/EquipmentMallActivity&events=1000&jenkinsUrl=http://ci.sankuai.com/job/banma/job/banma_autotest/job/banma_app_ci/job/Banma_Android_CrowdSource_Monkey/269/&after=notifyCrashAndAnrforStability&notify=wangtongchuang@meituan.com&numbers=561e73d2&misId=wangtongchuang&conanKey=d28caa9d-ad75-4d62-8420-df2f658bfb76 https://conan.sankuai.com/ci/stability/advanced-monkey";
-            String ppid= "8183"+i;
-            String egid= "500"+i;
-            String gid= "500"+i;
-            String euid= "500"+i;
-            String user= "sankuai"+i;
-            String uid= "500"+i;
+            String ppid= "8183"+9*i;
+            String egid= "500"+9*i;
+            String gid= "500"+9*i;
+            String euid= "500"+9*i;
+            String user= "sankuai"+9*i;
+            String uid= "500"+9*i;
             String starttime= "2017-12-04T16:15:56+0800";
             String mtime= "2015-06-16T10:15:41+0800";
-            String owner_gid= "0"+i;
-            String owner_uid= "0"+i;
-            String mode= "100755"+i;
+            String owner_gid= "0"+9*i;
+            String owner_uid= "0"+9*i;
+            String mode= "100755"+9*i;
             String path= "/usr/bin/curl";
-            String sid= "-1"+i;
+            String sid= "-1"+9*i;
             String processname= "curl";
             String host_name="hadoop001";
+//            String file_data=i+" "+command+" "+ppid+" "+egid+" "+gid+" "+euid+" "+user+" "+uid+" "+starttime+ " "+mtime+" "+owner_gid+" "+owner_uid+" "+
+//                    mode+" "+path+" "+sid+" "+processname+" "+host_name+"\n";
+//            bw.write(file_data);
             Put put=new Put(Bytes.toBytes(rowkey));
-            String familyName="pid_data";
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(command),Bytes.toBytes(command));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(ppid),Bytes.toBytes(ppid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(egid),Bytes.toBytes(egid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(user),Bytes.toBytes(user));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(uid),Bytes.toBytes(uid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(starttime),Bytes.toBytes(starttime));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(mtime),Bytes.toBytes(mtime));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(owner_gid),Bytes.toBytes(owner_gid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(owner_uid),Bytes.toBytes(owner_uid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(mode),Bytes.toBytes(mode));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(path),Bytes.toBytes(path));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(gid),Bytes.toBytes(gid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(euid),Bytes.toBytes(euid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(sid),Bytes.toBytes(sid));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(processname),Bytes.toBytes(processname));
-            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes(host_name),Bytes.toBytes(host_name));
+            String familyName="data";
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("command"),Bytes.toBytes(command));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("ppid"),Bytes.toBytes(ppid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("egid"),Bytes.toBytes(egid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("user"),Bytes.toBytes(user));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("uid"),Bytes.toBytes(uid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("starttime"),Bytes.toBytes(starttime));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("mtime"),Bytes.toBytes(mtime));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("owner_gid"),Bytes.toBytes(owner_gid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("owner_uid"),Bytes.toBytes(owner_uid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("mode"),Bytes.toBytes(mode));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("path"),Bytes.toBytes(path));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("gid"),Bytes.toBytes(gid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("euid"),Bytes.toBytes(euid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("sid"),Bytes.toBytes(sid));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("processname"),Bytes.toBytes(processname));
+            put.addColumn(Bytes.toBytes(familyName),Bytes.toBytes("host_name"),Bytes.toBytes(host_name));
             list.add(put);
         }
+//        bw.close();
+//        fw.close();
        return list;
     }
 }

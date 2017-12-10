@@ -9,6 +9,7 @@
     <module>bigData</module>
     <module>web</module>
     <module>java</module>
+      <module>rpc</module>
   </modules>
   <packaging>pom</packaging>
 
